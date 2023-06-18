@@ -81,7 +81,7 @@ const getAllTweet = async (req, res) => {
     const { count, rows } = await Tweet.findAndCountAll({
       include: {
         model: LikeTweet,
-        //     attributes: ['id'],
+        attributes: ['user_id'],
       },
       where: whereQuery,
       //   order: [[orderedBy || 'product_name', ordered || 'ASC']],

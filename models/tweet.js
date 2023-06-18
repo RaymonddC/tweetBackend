@@ -16,7 +16,7 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'user_id',
       });
       Tweet.hasMany(models.LikeTweet, {
-        foreignKey: 'user_id',
+        foreignKey: 'tweet_id',
       });
     }
   }
