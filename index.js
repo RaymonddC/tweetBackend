@@ -9,6 +9,22 @@ app.use(express.static('public'));
 app.use(express.json());
 app.use(cors());
 
+const {
+  authRoute,
+  // productRouter,
+  // usersRoute,
+  // categoriesRoute,
+  // orderMenuRoute,
+  // transactionRoute,
+} = require('./routers');
+
+app.use('/auth', authRoute);
+// app.use('/products', productRouter);
+// app.use('/categories', categoriesRoute);
+// app.use('/users', usersRoute);
+// app.use('/ordermenu', orderMenuRoute);
+// app.use('/transactions', transactionRoute);
+
 app.listen(PORT, () => {
   console.log(`server started successfully on port ${PORT}`);
 });
