@@ -4,10 +4,12 @@
 
 // const usersRoute = require('./usersRoute');
 const authRoute = require('./authRoute');
+const tweetsRoute = require('./tweetsRoute');
 // const categoriesRoute = require('./categoriesRoute');
 
 module.exports = {
   authRoute,
+  tweetsRoute,
   //   productRouter,
   //   usersRoute,
   //   categoriesRoute,

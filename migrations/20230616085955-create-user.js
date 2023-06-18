@@ -22,7 +22,7 @@ module.exports = {
         },
       },
       email: {
-        type: DataTypes.STRING,
+        type: Sequelize.STRING,
         unique: {
           args: true,
           msg: 'Email address already in use!',

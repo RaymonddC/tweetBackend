@@ -11,6 +11,7 @@ app.use(cors());
 
 const {
   authRoute,
+  tweetsRoute,
   // productRouter,
   // usersRoute,
   // categoriesRoute,
@@ -19,6 +20,7 @@ const {
 } = require('./routers');
 
 app.use('/auth', authRoute);
+app.use('/tweet', tweetsRoute);
 // app.use('/products', productRouter);
 // app.use('/categories', categoriesRoute);
 // app.use('/users', usersRoute);
