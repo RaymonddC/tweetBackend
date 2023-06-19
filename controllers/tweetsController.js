@@ -100,7 +100,7 @@ const getAllTweet = async (req, res) => {
 
     return res.status(200).send({
       success: true,
-      message: 'getAll Post',
+      message: 'getAll Tweet',
       data: rows,
       pageCount: count,
     });
@@ -113,121 +113,173 @@ const getAllTweet = async (req, res) => {
   }
 };
 
-// const deletePost = async (req, res) => {
-//   try {
-//     const userId = req.user.id;
-//     const { id } = req.params;
+const getTweet = async (req, res) => {
+  try {
+    const { id } = req.params;
 
-//     let result = await Post.findOne({
-//       where: {
-//         id: id,
-//       },
-//     });
+    let result = await Tweet.findOne({
+      include: [
+        {
+          model: LikeTweet,
+          attributes: ['user_id'],
+        },
+        {
+          model: User,
+          attributes: ['username', 'official', 'profilePicture', 'fullname'],
+        },
+      ],
+      where: {
+        id: id,
+      },
+    });
 
-//     if (!result)
-//       return res.status(400).send({
-//         success: false,
-//         message: 'Post not found',
-//         data: null,
-//       });
+    if (!result) throw { message: 'Tweet not found', code: 400 };
 
-//     if (result.dataValues.user_id !== userId)
-//       return res.status(400).send({
-//         success: false,
-//         message: 'Not users Post',
-//         data: null,
-//       });
+    return res.status(200).send({
+      success: true,
+      message: 'Tweet Found',
+      data: result,
+    });
+  } catch (error) {
+    res.status(error.code || 500).send({
+      success: false,
+      message: error.message,
+      data: null,
+    });
+  }
+};
 
-//     const deletePost = await Post.destroy({
-//       where: {
-//         id: id,
-//       },
-//     });
+const getCommentsTweet = async (req, res) => {
+  try {
+    let { page = 1, limitPage = 5 } = req.query;
+    const { id } = req.params;
 
-//     if (!deletePost)
-//       return res.status(400).send({
-//         success: false,
-//         message: 'Post not found',
-//         data: null,
-//       });
+    let { count, rows } = await Tweet.findAndCountAll({
+      include: [
+        {
+          model: LikeTweet,
+          attributes: ['user_id'],
+        },
+        {
+          model: User,
+          attributes: ['username', 'official', 'profilePicture', 'fullname'],
+        },
+      ],
+      where: {
+        reply_id: id,
+      },
+      order: [['createdAt', 'DESC']],
+      limit: Number(limitPage),
+      offset: (Number(page) - 1) * limitPage,
+    });
 
-//     return res.status(200).send({
-//       success: true,
-//       message: 'Post Deleted',
-//       data: result,
-//       token: null,
-//     });
-//   } catch (error) {
-//     res.status(500).send({
-//       success: true,
-//       message: error.message,
-//       data: null,
-//     });
-//   }
-// };
+    // if (!result) throw { message: 'Tweet not found', code: 400 };
 
-// const updatePost = async (req, res) => {
-//   try {
-//     const userId = req.user.id;
-//     const { id } = req.params;
+    return res.status(200).send({
+      success: true,
+      message: 'getAll Commnets Tweet',
+      data: rows,
+      pageCount: count,
+    });
+  } catch (error) {
+    res.status(error.code || 500).send({
+      success: false,
+      message: error.message,
+      data: null,
+    });
+  }
+};
 
-//     let result = await Post.findOne({
-//       where: {
-//         id: id,
-//       },
-//     });
+const deleteTweet = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;
 
-//     if (!result)
-//       return res.status(400).send({
-//         success: false,
-//         message: 'Post not found',
-//         data: null,
-//       });
+    let result = await Tweet.findOne({
+      where: {
+        id: id,
+      },
+    });
 
-//     if (result.dataValues.user_id !== userId)
-//       return res.status(400).send({
-//         success: false,
-//         message: 'Not users Post',
-//         data: null,
-//       });
+    if (!result) throw { message: 'Tweet not found', code: 400 };
 
-//     const { caption, imageUrl } = req.body;
+    if (result.dataValues.user_id !== userId) throw { message: 'Tweet not belongs to user', code: 400 };
 
-//     const post = result.dataValues;
+    const deleteTweet = await Tweet.destroy({
+      where: {
+        [Op.or]: [{ id: id }, { reply_id: id }], //comment juga hapus
+      },
+    });
 
-//     const resultUpdate = await Post.update(
-//       {
-//         caption: caption ? caption : post.caption,
-//         imageUrl: imageUrl ? imageUrl : post.imageUrl,
-//         user_id: post.user_id,
-//       },
-//       {
-//         where: {
-//           id: id,
-//         },
-//       }
-//     );
+    if (!deleteTweet) throw { message: 'Tweet not found', code: 400 };
 
-//     result = await Post.findOne({
-//       where: {
-//         id: id,
-//       },
-//     });
+    return res.status(200).send({
+      success: true,
+      message: 'Tweet Deleted',
+      data: result,
+    });
+  } catch (error) {
+    res.status(error.code || 500).send({
+      success: false,
+      message: error.message,
+      data: null,
+    });
+  }
+};
 
-//     return res.status(200).send({
-//       success: true,
-//       message: 'Post Updated',
-//       data: result,
-//       token: null,
-//     });
-//   } catch (error) {
-//     res.status(500).send({
-//       success: true,
-//       message: error.message,
-//       data: null,
-//     });
-//   }
-// };
+const updateTweet = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;
+
+    let result = await Tweet.findOne({
+      where: {
+        id: id,
+      },
+    });
+
+    if (!result) throw { message: 'Tweet not found', code: 400 };
+
+    if (result.dataValues.user_id !== userId) throw { message: 'Tweet not belongs to user', code: 400 };
+
+    const { caption } = req.body;
+    const file = req.file?.filename;
+
+    const tweet = result.dataValues;
+
+    const resultUpdate = await Tweet.update(
+      {
+        caption: caption ? caption : tweet.caption,
+        media: file ? file : tweet.media,
+        user_id: tweet.userId,
+        reply_id: tweet.reply_id,
+      },
+      {
+        where: {
+          id: id,
+        },
+      }
+    );
+
+    result = await Tweet.findOne({
+      where: {
+        id: id,
+      },
+    });
+
+    return res.status(200).send({
+      success: true,
+      message: 'Tweet Updated',
+      data: result,
+    });
+  } catch (error) {
+    res.status(error.code || 500).send({
+      success: false,
+      message: error.message,
+      data: null,
+    });
+  }
+};
 
 // const getUserPost = async (req, res) => {
 //   try {
@@ -296,6 +348,10 @@ module.exports = {
   //   verifyActiveUser,
   tweetCreate,
   getAllTweet,
+  getTweet,
+  getCommentsTweet,
+  deleteTweet,
+  updateTweet,
   //   deletePost,
   //   updatePost,
   //   getUserPost,
