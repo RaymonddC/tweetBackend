@@ -4,7 +4,7 @@ const { Op } = require('sequelize');
 
 const sequelize = require('sequelize');
 
-const limitPage = 15;
+// const limitPage = 3;
 
 // const generateTable = async (req, res) => {
 //   Post.sync({ alter: true });
@@ -41,6 +41,7 @@ const tweetCreate = async (req, res) => {
   try {
     const { caption, reply_id } = req.body;
     const file = req.file;
+    console.log(caption);
 
     if (!caption && !file) throw { message: 'Tweet at least have caption or image', code: 400 };
 
@@ -48,7 +49,7 @@ const tweetCreate = async (req, res) => {
     const result = await Tweet.create({
       caption,
       media: file?.filename || null,
-      user_id: userId || '1',
+      user_id: userId,
       reply_id: reply_id,
     });
 
@@ -70,51 +71,32 @@ const tweetCreate = async (req, res) => {
 
 const getAllTweet = async (req, res) => {
   try {
-    let { searchCategory, ordered, orderedBy, searchQuery, page } = req.query;
+    let { searchCategory, ordered, orderedBy, search, page = 1, limitPage = 3 } = req.query;
 
     let whereQuery = {
-      caption: { [Op.like]: `%${searchQuery || ''}%` },
+      caption: { [Op.like]: `%${search || ''}%` },
+      reply_id: { [Op.eq]: null },
     };
 
     // if (searchCategory) whereQuery['category_id'] = searchCategory;
 
     const { count, rows } = await Tweet.findAndCountAll({
-      include: {
-        model: LikeTweet,
-        attributes: ['user_id'],
-      },
+      include: [
+        {
+          model: LikeTweet,
+          attributes: ['user_id'],
+        },
+        {
+          model: User,
+          attributes: ['username', 'official', 'profilePicture', 'fullname'],
+        },
+      ],
       where: whereQuery,
-      //   order: [[orderedBy || 'product_name', ordered || 'ASC']],
-      //   limit: limitPage,
-      //   offset: (Number(page) - 1) * limitPage,
+      order: [['createdAt', 'DESC']],
+      limit: Number(limitPage),
+      offset: (Number(page) - 1) * limitPage,
     });
-    // const { page } = req.query;
-
-    // let result = await Tweet.findAll({
-    //   //   attributes: { exclude: ['category_image'] },
-    // });
-
-    // const posts = await Post.findAll({
-    //   offset: (page - 1) * limitPage,
-    //   limit: limitPage,
-    //   include: {
-    //     model: User,
-    //     attributes: ['firstName', 'email', 'username'],
-    //   },
-    // });
-
-    // const { count, rows } = await Post.findAndCountAll({
-    //   offset: (page - 1) * limitPage,
-    //   limit: limitPage,
-    //   include: {
-    //     model: User,
-    //     attributes: ['firstName', 'email', 'username'],
-    //   },
-    // });
-
-    // const rows = await PostRepo.findAll();
-
-    // console.log(posts);
+    console.log(count);
 
     return res.status(200).send({
       success: true,

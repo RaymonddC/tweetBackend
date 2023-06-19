@@ -5,7 +5,7 @@ const auth = require('../middleware/auth');
 const { authController, tweetsController } = require('./../controllers');
 const { multerTweetImage } = require('../middleware/MulterTweet');
 
-router.post('/', multerTweetImage.single('image'), tweetsController.tweetCreate);
+router.post('/', auth.verifyToken, multerTweetImage.single('image'), tweetsController.tweetCreate);
 router.get('/', tweetsController.getAllTweet);
 // router.get('/sendVerifLink/:username', authController.sendVerifLink);
 // router.post('/login', authController.userLogin);
